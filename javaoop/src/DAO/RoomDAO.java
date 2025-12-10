@@ -12,7 +12,7 @@ public class RoomDAO {
     // Lấy tất cả phòng kèm thông tin loại phòng (JOIN bảng)
     public List<Room> getAllRooms() {
         List<Room> list = new ArrayList<>();
-        String sql = "SELECT r.room_id, r.status, rt.type_id, rt.type_name, rt.base_price " +
+        String sql = "SELECT r.room_id, r.room_number, r.status, rt.type_id, rt.type_name, rt.price_per_night " +
                 "FROM Room r JOIN RoomType rt ON r.type_id = rt.type_id";
 
         try (Connection conn = DatabaseConnection.getConnection();
@@ -23,7 +23,7 @@ public class RoomDAO {
                 RoomType type = new RoomType(
                         rs.getString("type_id"),
                         rs.getString("type_name"),
-                        rs.getDouble("base_price")
+                        rs.getDouble("price_per_night")
                 );
                 list.add(new Room(rs.getString("room_id"), type, rs.getString("status")));
             }
