@@ -11,13 +11,12 @@ public class AuthService {
     }
 
     public Account login(String username, String password) {
-        // 1. Gọi DAO lấy thông tin user từ DB
+        
         Account acc = accountDAO.getAccountByUsername(username);
 
-        // 2. Kiểm tra mật khẩu (Logic nghiệp vụ)
         if (acc != null && acc.getPassword().equals(password)) {
-            return acc; // Đăng nhập thành công
+            return acc; 
         }
-        return null; // Sai pass hoặc không tồn tại user
+        return null;
     }
 }

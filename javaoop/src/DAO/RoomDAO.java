@@ -9,7 +9,6 @@ import java.util.List;
 
 public class RoomDAO {
 
-    // Lấy tất cả phòng kèm thông tin loại phòng (JOIN bảng)
     public List<Room> getAllRooms() {
         List<Room> list = new ArrayList<>();
         String sql = "SELECT r.room_id, r.room_number, r.status, rt.type_id, rt.type_name, rt.price_per_night " +
@@ -33,7 +32,6 @@ public class RoomDAO {
         return list;
     }
 
-    // Cập nhật trạng thái phòng (Available <-> Occupied)
     public boolean updateRoomStatus(String roomId, String status) {
         String sql = "UPDATE Room SET status = ? WHERE room_id = ?";
         try (Connection conn = DatabaseConnection.getConnection();

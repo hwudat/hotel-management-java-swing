@@ -7,7 +7,6 @@ import java.util.List;
 
 public class FeedbackDAO {
 
-    // Khách hàng gửi phản hồi
     public boolean sendFeedback(String customerId, String content, int rating) {
         String sql = "INSERT INTO Feedback(customer_id, content, rating, create_date) VALUES (?, ?, ?, GETDATE())";
         try (Connection conn = DatabaseConnection.getConnection();
@@ -24,10 +23,8 @@ public class FeedbackDAO {
         return false;
     }
 
-    // Manager xem tất cả phản hồi (Dạng String đơn giản để hiển thị)
     public List<String> getAllFeedbacks() {
         List<String> list = new ArrayList<>();
-        // Join bảng để lấy tên khách hàng thay vì ID
         String sql = "SELECT c.name, f.content, f.rating, f.create_date " +
                 "FROM Feedback f JOIN Customer c ON f.customer_id = c.customer_id";
 

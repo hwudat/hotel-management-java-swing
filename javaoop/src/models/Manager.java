@@ -5,7 +5,7 @@ public class Manager {
     private String nameManager;
     private String idCardNumber;
     private String phoneNum;
-    private Account account; // Quan hệ 1-1
+    private Account account; 
 
     public Manager(String managerID, String name, String idCard, String phone, Account account) {
         this.managerID = managerID;
@@ -15,10 +15,9 @@ public class Manager {
         this.account = account;
     }
 
-    // Các phương thức quản trị theo sơ đồ
     public void addRoom(Room room) {
         System.out.println("Manager added room: " + room.getRoomID());
-        // Thực tế: Gọi DAO để lưu vào DB
+     
     }
 
     public void manageStaff() {

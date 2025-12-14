@@ -5,12 +5,11 @@ import java.util.List;
 
 public class RoomBooking {
     private String bookingID;
-    private Room room;          // Quan hệ n-1
-    private Customer customer;  // Quan hệ n-1
+    private Room room;          
+    private Customer customer;  
     private Date checkInDate;
     private Date checkOutDate;
 
-    // List này thay cho class RoomBookingService (quan hệ n-n)
     private List<Service> serviceList;
 
     public RoomBooking(String id, Room r, Customer c, Date in, Date out) {
@@ -29,7 +28,7 @@ public class RoomBooking {
 
     public double calculateTotal() {
         long diff = checkOutDate.getTime() - checkInDate.getTime();
-        long days = diff / (1000 * 60 * 60 * 24); // Tính số ngày
+        long days = diff / (1000 * 60 * 60 * 24); 
         if (days == 0) days = 1;
 
         double roomTotal = days * room.getPrice();

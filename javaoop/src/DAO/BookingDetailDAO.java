@@ -5,7 +5,6 @@ import java.sql.*;
 
 public class BookingDetailDAO {
 
-    // Thêm dịch vụ vào hóa đơn phòng
     public boolean addServiceToBooking(String bookingID, String serviceID, int quantity, double price) {
         String sql = "INSERT INTO BookingDetail(booking_id, service_id, quantity, price_at_booking) VALUES (?, ?, ?, ?)";
         try (Connection conn = DatabaseConnection.getConnection();
@@ -23,7 +22,6 @@ public class BookingDetailDAO {
         return false;
     }
 
-    // Lấy tổng tiền dịch vụ của một booking (Dùng để tính hóa đơn cuối cùng)
     public double getTotalServicePrice(String bookingID) {
         String sql = "SELECT SUM(quantity * price_at_booking) FROM BookingDetail WHERE booking_id = ?";
         try (Connection conn = DatabaseConnection.getConnection();

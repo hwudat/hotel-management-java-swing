@@ -17,7 +17,7 @@ public class LoginView extends JFrame {
     private JPasswordField txtPass;
     private JButton btnLogin;
     private JButton btnExit;
-    private JLabel lblRegister; // Thêm nhãn đăng ký
+    private JLabel lblRegister; 
     
     private AccountDAO accountDAO; 
     private int xMouse, yMouse;
@@ -29,7 +29,7 @@ public class LoginView extends JFrame {
     }
 
     private void initComponents() {
-        // --- 1. SETUP FRAME ---
+       
         setTitle("Đăng nhập hệ thống");
         setSize(850, 500);
         setLocationRelativeTo(null);
@@ -37,7 +37,6 @@ public class LoginView extends JFrame {
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLayout(null);
 
-        // --- 2. PANEL TRÁI ---
         JPanel panelLeft = new JPanel();
         panelLeft.setBackground(new Color(44, 62, 80)); 
         panelLeft.setBounds(0, 0, 400, 500);
@@ -62,13 +61,11 @@ public class LoginView extends JFrame {
         panelLeft.add(lbDesc);
         add(panelLeft);
 
-        // --- 3. PANEL PHẢI ---
         JPanel panelRight = new JPanel();
         panelRight.setBackground(Color.WHITE);
         panelRight.setBounds(400, 0, 450, 500);
         panelRight.setLayout(null);
 
-        // Nút tắt (X)
         JLabel lbClose = new JLabel("X");
         lbClose.setFont(new Font("Segoe UI", Font.BOLD, 20));
         lbClose.setForeground(Color.GRAY);
@@ -87,7 +84,6 @@ public class LoginView extends JFrame {
         lbLoginHeader.setBounds(100, 60, 250, 50);
         panelRight.add(lbLoginHeader);
 
-        // Username
         JLabel l1 = new JLabel("Tên đăng nhập");
         l1.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         l1.setForeground(Color.GRAY);
@@ -100,7 +96,6 @@ public class LoginView extends JFrame {
         txtUser.setBorder(new MatteBorder(0, 0, 2, 0, new Color(44, 62, 80)));
         panelRight.add(txtUser);
 
-        // Password
         JLabel l2 = new JLabel("Mật khẩu");
         l2.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         l2.setForeground(Color.GRAY);
@@ -113,7 +108,6 @@ public class LoginView extends JFrame {
         txtPass.setBorder(new MatteBorder(0, 0, 2, 0, new Color(44, 62, 80)));
         panelRight.add(txtPass);
 
-        // Nút Login
         btnLogin = new JButton("Đăng nhập");
         btnLogin.setBackground(new Color(44, 62, 80));
         btnLogin.setForeground(Color.WHITE);
@@ -124,9 +118,8 @@ public class LoginView extends JFrame {
         btnLogin.setCursor(new Cursor(Cursor.HAND_CURSOR));
         panelRight.add(btnLogin);
 
-        // Nút Thoát
         btnExit = new JButton("Thoát");
-        btnExit.setBackground(new Color(231, 76, 60)); // Màu đỏ
+        btnExit.setBackground(new Color(231, 76, 60)); 
         btnExit.setForeground(Color.WHITE);
         btnExit.setFont(new Font("Segoe UI", Font.BOLD, 14));
         btnExit.setBounds(230, 320, 160, 40);
@@ -135,7 +128,6 @@ public class LoginView extends JFrame {
         btnExit.setCursor(new Cursor(Cursor.HAND_CURSOR));
         panelRight.add(btnExit);
 
-        // --- PHẦN MỚI THÊM: LINK ĐĂNG KÝ ---
         lblRegister = new JLabel("<html>Bạn chưa có tài khoản? <b>Đăng ký ngay</b></html>");
         lblRegister.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         lblRegister.setForeground(new Color(44, 62, 80));
@@ -145,7 +137,6 @@ public class LoginView extends JFrame {
 
         add(panelRight);
 
-        // Kéo thả cửa sổ
         addMouseListener(new MouseAdapter() {
             public void mousePressed(MouseEvent evt) {
                 xMouse = evt.getX();
@@ -161,16 +152,14 @@ public class LoginView extends JFrame {
 
     private void initEvents() {
         
-        // --- SỰ KIỆN CLICK ĐĂNG KÝ ---
         lblRegister.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                // Mở form đăng ký
+               
                 new RegisterView().setVisible(true);
             }
         });
 
-        // Sự kiện nút Đăng Nhập
         btnLogin.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {

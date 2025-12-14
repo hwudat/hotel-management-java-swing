@@ -1,69 +1,40 @@
 package models;
 
 public class Customer {
-    private String customerID;
-    private String nameCustomer;
-    private String idCardNumber;
-    private String phoneNum;
-    private String address;
-    private Account account; // Quan hệ 1-1
+    private int customerId; 
+    private String fullName;
+    private String phone;
+    private String identityCard; // CCCD
+    private String gender;
+    private String nationality;
 
-    public Customer(String id, String name, String phone, Account acc) {
-        this.customerID = id;
-        this.nameCustomer = name;
-        this.phoneNum = phone;
-        this.account = acc;
+    public Customer() {
     }
 
-    public Customer(String customerID, String nameCustomer, String idCardNumber, String phoneNum) {
-        this.customerID = customerID;
-        this.nameCustomer = nameCustomer;
-        this.idCardNumber = idCardNumber;
-        this.phoneNum = phoneNum;
+    public Customer(int customerId, String fullName, String phone, String identityCard, String gender, String nationality) {
+        this.customerId = customerId;
+        this.fullName = fullName;
+        this.phone = phone;
+        this.identityCard = identityCard;
+        this.gender = gender;
+        this.nationality = nationality;
     }
 
-    public String getNameCustomer() { return nameCustomer; }
+    public int getCustomerId() { return customerId; }
+    public void setCustomerId(int customerId) { this.customerId = customerId; }
 
-    public void register() {
-        System.out.println("Customer " + nameCustomer + " registered.");
-    }
+    public String getFullName() { return fullName; }
+    public void setFullName(String fullName) { this.fullName = fullName; }
 
-    public void bookRoom(Room room) {
-        System.out.println("Customer requested booking for room " + room.getRoomID());
-    }
+    public String getPhone() { return phone; }
+    public void setPhone(String phone) { this.phone = phone; }
 
-    @Override
-    public String toString() {
-        return "Customer{" +
-                "ID='" + customerID + '\'' +
-                ", Tên khách hàng: " + nameCustomer + '\'' +
-                ", CCCD: " + idCardNumber + '\'' +
-                ", SĐT: " + phoneNum + '\'' +
-                ", Địa chỉ: " + address + '\'' +
-                '}';
-    }
+    public String getIdentityCard() { return identityCard; }
+    public void setIdentityCard(String identityCard) { this.identityCard = identityCard; }
 
-    public String getCustomerID() {
-        return customerID;
-    }
+    public String getGender() { return gender; }
+    public void setGender(String gender) { this.gender = gender; }
 
-    public String getIdCardNumber() {
-        return idCardNumber;
-    }
-
-    public String getPhoneNum() {
-        return phoneNum;
-    }
-
-    public String getAddress() {
-        return address;
-    }
-
-    public Customer(String address, String nameCustomer, String phoneNum, String idCardNumber, String customerID) {
-        this.nameCustomer = nameCustomer;
-        this.address = address;
-        this.phoneNum = phoneNum;
-        this.idCardNumber = idCardNumber;
-        this.customerID = customerID;
-    }
+    public String getNationality() { return nationality; }
+    public void setNationality(String nationality) { this.nationality = nationality; }
 }
