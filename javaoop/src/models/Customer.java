@@ -4,7 +4,7 @@ public class Customer {
     private int customerId; 
     private String fullName;
     private String phone;
-    private String identityCard; // CCCD
+    private String identityCard; 
     private String gender;
     private String nationality;
 

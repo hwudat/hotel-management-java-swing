@@ -13,7 +13,6 @@ import java.awt.event.MouseEvent;
 
 public class CustomerManagementForm extends JFrame {
 
-    // Components
     private JTextField txtCustomerID, txtRoomNumber, txtName, txtCCCD, txtPhone, txtNationality;
     private JRadioButton radMale, radFemale;
     private ButtonGroup genderGroup;
@@ -21,15 +20,14 @@ public class CustomerManagementForm extends JFrame {
     private DefaultTableModel tableModel;
     private JTextField txtSearch;
     
-    // DAO
     private CustomerDAO customerDAO;
 
-    // Màu sắc
     private final Color PRIMARY_COLOR = new Color(44, 62, 80);
     private final Color ACCENT_COLOR = new Color(52, 152, 219);
 
     public CustomerManagementForm() {
         customerDAO = new CustomerDAO(); 
+        initUI();
         loadData(""); 
     }
 
@@ -211,7 +209,7 @@ public class CustomerManagementForm extends JFrame {
         txtCustomerID.setBackground(new Color(240, 240, 240));
 
         addInputRow(inputPanel, "Phòng đang thuê:", txtRoomNumber = new JTextField(), row++, gbc);
-        txtRoomNumber.setEditable(false); 
+        txtRoomNumber.setEditable(false); // Phòng lấy từ DB, không sửa tay
         txtRoomNumber.setFont(new Font("Segoe UI", Font.BOLD, 12));
 
         addInputRow(inputPanel, "Họ và Tên:", txtName = new JTextField(), row++, gbc);
@@ -237,6 +235,7 @@ public class CustomerManagementForm extends JFrame {
         inputPanel.add(new JLabel(), gbc);
         panel.add(inputPanel, BorderLayout.CENTER);
 
+        // Nút bấm
         JPanel btnPanel = new JPanel(new GridLayout(2, 2, 10, 10));
         btnPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
 
@@ -245,6 +244,7 @@ public class CustomerManagementForm extends JFrame {
         JButton btnDelete = createButton("Xóa", new Color(231, 76, 60));
         JButton btnClear = createButton("Làm mới", Color.GRAY);
 
+        // Gắn sự kiện thật
         btnAdd.addActionListener(e -> addCustomer());
         btnEdit.addActionListener(e -> updateCustomer());
         btnDelete.addActionListener(e -> deleteCustomer());
