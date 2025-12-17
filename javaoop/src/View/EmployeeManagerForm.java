@@ -1,35 +1,36 @@
 package View;
 
-import DAO.EmployeeDAO;
-import models.Employee;
-
+import DAO.EmployeeDAO; // [MỚI] Import DAO
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.text.DecimalFormat;
 
 public class EmployeeManagerForm extends JFrame {
 
+    // Components
     private JTextField txtEmpID, txtName, txtPhone, txtEmail, txtSalary, txtSearch;
     private JComboBox<String> cbPosition, cbGender;
     private JTable table;
     private DefaultTableModel tableModel;
-    
+
+    // [MỚI] Khai báo DAO
     private EmployeeDAO employeeDAO;
 
+    // Dữ liệu mẫu cho Chức vụ
     private final String[] POSITIONS = {"Quản Lý", "Lễ Tân", "Buồng Phòng", "Bảo Vệ", "Kế Toán", "Bếp Trưởng"};
+
     private final Color PRIMARY_COLOR = new Color(44, 62, 80);
     private final Color ACCENT_COLOR = new Color(46, 204, 113);
 
     public EmployeeManagerForm() {
-        employeeDAO = new EmployeeDAO();
+        employeeDAO = new EmployeeDAO(); // [MỚI] Khởi tạo DAO
         initUI();
-        loadData(""); 
+        loadDataFromDB(""); // [MỚI] Load từ SQL thay vì MockData
     }
 
     private void initUI() {
@@ -39,6 +40,7 @@ public class EmployeeManagerForm extends JFrame {
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
 
+        // --- 1. HEADER ---
         JPanel topPanel = new JPanel(new BorderLayout());
         topPanel.setBackground(PRIMARY_COLOR);
         topPanel.setBorder(new EmptyBorder(15, 20, 15, 20));
@@ -47,16 +49,17 @@ public class EmployeeManagerForm extends JFrame {
         lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 24));
         lblTitle.setForeground(Color.WHITE);
 
+        // Tìm kiếm
         JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         searchPanel.setOpaque(false);
         txtSearch = new JTextField(15);
         JButton btnSearch = new JButton("Tìm kiếm");
 
-        ActionListener searchAction = e -> loadData(txtSearch.getText().trim());
-        btnSearch.addActionListener(searchAction);
-        txtSearch.addActionListener(searchAction);
+        // Sự kiện tìm kiếm
+        btnSearch.addActionListener(e -> loadDataFromDB(txtSearch.getText().trim()));
+        txtSearch.addActionListener(e -> loadDataFromDB(txtSearch.getText().trim()));
 
-        searchPanel.add(new JLabel("<html><font color='white'>Tìm tên/SĐT:</font></html>"));
+        searchPanel.add(new JLabel("<html><font color='white'>Tìm tên/Mã NV:</font></html>"));
         searchPanel.add(txtSearch);
         searchPanel.add(btnSearch);
 
@@ -64,6 +67,7 @@ public class EmployeeManagerForm extends JFrame {
         topPanel.add(searchPanel, BorderLayout.EAST);
         add(topPanel, BorderLayout.NORTH);
 
+        // --- 2. MAIN CONTENT ---
         JPanel mainPanel = new JPanel(new BorderLayout(15, 0));
         mainPanel.setBorder(new EmptyBorder(15, 15, 15, 15));
 
@@ -73,88 +77,12 @@ public class EmployeeManagerForm extends JFrame {
         add(mainPanel, BorderLayout.CENTER);
     }
 
-    
-    private void loadData(String keyword) {
-        employeeDAO.loadEmployeeData(tableModel, keyword);
+    // [MỚI] Hàm gọi DAO để load dữ liệu
+    private void loadDataFromDB(String keyword) {
+        employeeDAO.loadData(tableModel, keyword);
     }
 
-    private void addEmployee() {
-        if (!validateInput()) return;
-        try {
-            Employee emp = new Employee();
-            emp.setFullName(txtName.getText());
-            emp.setPosition((String) cbPosition.getSelectedItem());
-            emp.setGender((String) cbGender.getSelectedItem());
-            emp.setPhone(txtPhone.getText());
-            emp.setEmail(txtEmail.getText());
-            emp.setSalary(Double.parseDouble(txtSalary.getText().replace(",", "").trim()));
-
-            if (employeeDAO.addEmployee(emp)) {
-                JOptionPane.showMessageDialog(this, "Thêm nhân viên thành công!");
-                loadData("");
-                clearForm();
-            } else {
-                JOptionPane.showMessageDialog(this, "Lỗi khi thêm!", "Lỗi", JOptionPane.ERROR_MESSAGE);
-            }
-        } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this, "Lương phải là số!", "Lỗi nhập liệu", JOptionPane.ERROR_MESSAGE);
-        }
-    }
-
-    private void updateEmployee() {
-        if (txtEmpID.getText().equals("Tự động") || txtEmpID.getText().isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Vui lòng chọn nhân viên cần sửa!");
-            return;
-        }
-        try {
-            Employee emp = new Employee();
-            emp.setEmployeeId(Integer.parseInt(txtEmpID.getText()));
-            emp.setFullName(txtName.getText());
-            emp.setPosition((String) cbPosition.getSelectedItem());
-            emp.setGender((String) cbGender.getSelectedItem());
-            emp.setPhone(txtPhone.getText());
-            emp.setEmail(txtEmail.getText());
-            emp.setSalary(Double.parseDouble(txtSalary.getText().replace(",", "").trim()));
-
-            if (employeeDAO.updateEmployee(emp)) {
-                JOptionPane.showMessageDialog(this, "Cập nhật thành công!");
-                loadData("");
-                clearForm();
-            } else {
-                JOptionPane.showMessageDialog(this, "Lỗi cập nhật!", "Lỗi", JOptionPane.ERROR_MESSAGE);
-            }
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-    }
-
-    private void deleteEmployee() {
-        if (txtEmpID.getText().equals("Tự động") || txtEmpID.getText().isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Vui lòng chọn nhân viên cần xóa!");
-            return;
-        }
-        int confirm = JOptionPane.showConfirmDialog(this, "Bạn có chắc chắn muốn xóa nhân viên này?", "Xác nhận", JOptionPane.YES_NO_OPTION);
-        if (confirm == JOptionPane.YES_OPTION) {
-            int id = Integer.parseInt(txtEmpID.getText());
-            if (employeeDAO.deleteEmployee(id)) {
-                JOptionPane.showMessageDialog(this, "Xóa thành công!");
-                loadData("");
-                clearForm();
-            } else {
-                JOptionPane.showMessageDialog(this, "Không thể xóa! Nhân viên này đang có dữ liệu liên quan (Booking).", "Lỗi", JOptionPane.ERROR_MESSAGE);
-            }
-        }
-    }
-
-    private boolean validateInput() {
-        if (txtName.getText().isEmpty() || txtPhone.getText().isEmpty() || txtSalary.getText().isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Vui lòng nhập Tên, SĐT và Lương!");
-            return false;
-        }
-        return true;
-    }
-
-
+    // Tạo bảng danh sách
     private JPanel createTablePanel() {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBorder(BorderFactory.createTitledBorder(
@@ -166,15 +94,16 @@ public class EmployeeManagerForm extends JFrame {
         tableModel = new DefaultTableModel(cols, 0);
         table = new JTable(tableModel);
         table.setRowHeight(30);
-        table.getTableHeader().setBackground(new Color(230, 230, 230));
-        table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 12));
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
+        // Click bảng -> Đổ dữ liệu
         table.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 int row = table.getSelectedRow();
-                if (row >= 0) fillForm(row);
+                if (row >= 0) {
+                    fillForm(row);
+                }
             }
         });
 
@@ -182,16 +111,7 @@ public class EmployeeManagerForm extends JFrame {
         return panel;
     }
 
-    private void fillForm(int row) {
-        txtEmpID.setText(tableModel.getValueAt(row, 0).toString());
-        txtName.setText(tableModel.getValueAt(row, 1).toString());
-        cbPosition.setSelectedItem(tableModel.getValueAt(row, 2).toString());
-        cbGender.setSelectedItem(tableModel.getValueAt(row, 3).toString());
-        txtPhone.setText(tableModel.getValueAt(row, 4).toString());
-        txtEmail.setText(tableModel.getValueAt(row, 5).toString());
-        txtSalary.setText(tableModel.getValueAt(row, 6).toString().replace(",", ""));
-    }
-
+    // Tạo Form nhập liệu
     private JPanel createFormPanel() {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setPreferredSize(new Dimension(380, 0));
@@ -217,7 +137,6 @@ public class EmployeeManagerForm extends JFrame {
         inputPanel.add(new JLabel("Chức vụ:"), gbc);
         gbc.gridx = 1;
         cbPosition = new JComboBox<>(POSITIONS);
-        cbPosition.setBackground(Color.WHITE);
         inputPanel.add(cbPosition, gbc);
         row++;
 
@@ -236,17 +155,84 @@ public class EmployeeManagerForm extends JFrame {
         inputPanel.add(new JLabel(), gbc);
         panel.add(inputPanel, BorderLayout.CENTER);
 
+        // Nút bấm
         JPanel btnPanel = new JPanel(new GridLayout(2, 2, 10, 10));
         btnPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
 
         JButton btnAdd = createButton("Thêm NV", new Color(46, 204, 113));
         JButton btnEdit = createButton("Cập nhật", new Color(241, 196, 15));
-        JButton btnDel = createButton("Xóa", new Color(231, 76, 60));
+        JButton btnDel = createButton("Sa thải / Xóa", new Color(231, 76, 60));
         JButton btnClear = createButton("Làm mới", Color.GRAY);
 
-        btnAdd.addActionListener(e -> addEmployee());
-        btnEdit.addActionListener(e -> updateEmployee());
-        btnDel.addActionListener(e -> deleteEmployee());
+        // --- XỬ LÝ SỰ KIỆN GỌI DAO ---
+
+        // 1. THÊM
+        btnAdd.addActionListener(e -> {
+            if(txtName.getText().isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Vui lòng nhập tên nhân viên!");
+                return;
+            }
+            double salary = parseSalary(txtSalary.getText());
+
+            if(employeeDAO.addEmployee(
+                    txtName.getText(),
+                    cbPosition.getSelectedItem().toString(),
+                    cbGender.getSelectedItem().toString(),
+                    txtPhone.getText(),
+                    txtEmail.getText(),
+                    salary
+            )) {
+                JOptionPane.showMessageDialog(this, "Thêm nhân viên thành công!");
+                loadDataFromDB("");
+                clearForm();
+            } else {
+                JOptionPane.showMessageDialog(this, "Lỗi khi thêm! Có thể tên đăng nhập bị trùng.");
+            }
+        });
+
+        // 2. SỬA
+        btnEdit.addActionListener(e -> {
+            if(txtEmpID.getText().equals("Tự động")) {
+                JOptionPane.showMessageDialog(this, "Chọn nhân viên cần sửa trước!");
+                return;
+            }
+            int id = Integer.parseInt(txtEmpID.getText().replace("NV", ""));
+            double salary = parseSalary(txtSalary.getText());
+
+            if(employeeDAO.updateEmployee(
+                    id,
+                    txtName.getText(),
+                    cbPosition.getSelectedItem().toString(),
+                    cbGender.getSelectedItem().toString(),
+                    txtPhone.getText(),
+                    txtEmail.getText(),
+                    salary
+            )) {
+                JOptionPane.showMessageDialog(this, "Cập nhật thành công!");
+                loadDataFromDB("");
+                clearForm();
+            } else {
+                JOptionPane.showMessageDialog(this, "Lỗi cập nhật!");
+            }
+        });
+
+        // 3. XÓA
+        btnDel.addActionListener(e -> {
+            if(txtEmpID.getText().equals("Tự động")) return;
+
+            int confirm = JOptionPane.showConfirmDialog(this, "Bạn có chắc chắn muốn xóa nhân viên này?", "Cảnh báo", JOptionPane.YES_NO_OPTION);
+            if (confirm == JOptionPane.YES_OPTION) {
+                int id = Integer.parseInt(txtEmpID.getText().replace("NV", ""));
+                if(employeeDAO.deleteEmployee(id)) {
+                    JOptionPane.showMessageDialog(this, "Đã xóa nhân viên!");
+                    loadDataFromDB("");
+                    clearForm();
+                } else {
+                    JOptionPane.showMessageDialog(this, "Không thể xóa! Nhân viên này đang có dữ liệu trong hệ thống (Hóa đơn/Booking).");
+                }
+            }
+        });
+
         btnClear.addActionListener(e -> clearForm());
 
         btnPanel.add(btnAdd);
@@ -256,6 +242,40 @@ public class EmployeeManagerForm extends JFrame {
 
         panel.add(btnPanel, BorderLayout.SOUTH);
         return panel;
+    }
+
+    private void fillForm(int row) {
+        txtEmpID.setText(tableModel.getValueAt(row, 0).toString());
+        txtName.setText(tableModel.getValueAt(row, 1).toString());
+
+        String pos = tableModel.getValueAt(row, 2) != null ? tableModel.getValueAt(row, 2).toString() : "";
+        cbPosition.setSelectedItem(pos);
+
+        String gender = tableModel.getValueAt(row, 3) != null ? tableModel.getValueAt(row, 3).toString() : "Nam";
+        cbGender.setSelectedItem(gender);
+
+        txtPhone.setText(tableModel.getValueAt(row, 4).toString());
+        txtEmail.setText(tableModel.getValueAt(row, 5).toString());
+        txtSalary.setText(tableModel.getValueAt(row, 6).toString().replace(",", ""));
+    }
+
+    private void clearForm() {
+        txtEmpID.setText("Tự động");
+        txtName.setText("");
+        cbPosition.setSelectedIndex(0);
+        cbGender.setSelectedIndex(0);
+        txtPhone.setText("");
+        txtEmail.setText("");
+        txtSalary.setText("");
+        table.clearSelection();
+    }
+
+    private double parseSalary(String input) {
+        try {
+            return Double.parseDouble(input.replace(",", "").trim());
+        } catch (NumberFormatException e) {
+            return 0;
+        }
     }
 
     private void addInputRow(JPanel p, String label, JTextField tf, int y, GridBagConstraints gbc) {
@@ -272,17 +292,6 @@ public class EmployeeManagerForm extends JFrame {
         btn.setFocusPainted(false);
         btn.setFont(new Font("Segoe UI", Font.BOLD, 12));
         return btn;
-    }
-
-    private void clearForm() {
-        txtEmpID.setText("Tự động");
-        txtName.setText("");
-        cbPosition.setSelectedIndex(0);
-        cbGender.setSelectedIndex(0);
-        txtPhone.setText("");
-        txtEmail.setText("");
-        txtSalary.setText("");
-        table.clearSelection();
     }
 
     public static void main(String[] args) {

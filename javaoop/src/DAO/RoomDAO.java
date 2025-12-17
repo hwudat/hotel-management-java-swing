@@ -32,17 +32,21 @@ public class RoomDAO {
         return list;
     }
 
-    public boolean updateRoomStatus(String roomId, String status) {
+    // Hàm cập nhật trạng thái phòng (Dùng cho dọn dẹp, bảo trì)
+    public boolean updateRoomStatus(String roomId, String newStatus) {
         String sql = "UPDATE Room SET status = ? WHERE room_id = ?";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            ps.setString(1, status);
+        try (java.sql.Connection conn = Utils.DatabaseConnection.getConnection();
+             java.sql.PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, newStatus);
             ps.setString(2, roomId);
+
             return ps.executeUpdate() > 0;
         } catch (Exception e) {
             e.printStackTrace();
+            return false;
         }
-        return false;
     }
+
 }

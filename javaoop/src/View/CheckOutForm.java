@@ -158,33 +158,81 @@ public class CheckOutForm extends JFrame {
         }
     }
 
+    // Bạn nhớ thêm import DAO.ServiceDAO; ở trên cùng file nhé
+
     private void loadBookingInfo(String roomId) {
         if (roomId == null) return;
 
-        String sql = "SELECT c.full_name, c.phone, b.check_in_date, rt.price_per_night " +
-                     "FROM Booking b " +
-                     "JOIN Customer c ON b.customer_id = c.customer_id " +
-                     "JOIN Room r ON b.room_id = r.room_id " +
-                     "JOIN RoomType rt ON r.type_id = rt.type_id " +
-                     "WHERE b.room_id = ? AND b.status = 'Checked In'";
+        // [SỬA 1] Thêm b.booking_id vào câu lệnh SELECT để lấy ID đơn đặt
+        String sql = "SELECT b.booking_id, c.full_name, c.phone, b.check_in_date, rt.price_per_night " +
+                "FROM Booking b " +
+                "JOIN Customer c ON b.customer_id = c.customer_id " +
+                "JOIN Room r ON b.room_id = r.room_id " +
+                "JOIN RoomType rt ON r.type_id = rt.type_id " +
+                "WHERE b.room_id = ? AND b.status = 'Checked In'";
 
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            
+
             ps.setString(1, roomId);
             ResultSet rs = ps.executeQuery();
 
             if (rs.next()) {
+                // 1. Lấy thông tin cơ bản
+                int bookingId = rs.getInt("booking_id");
                 lblCustomerName.setText(rs.getString("full_name"));
                 lblPhone.setText(rs.getString("phone"));
-                lblCheckIn.setText(rs.getString("check_in_date"));
-                
-                double price = rs.getDouble("price_per_night");
-                lblRoomPrice.setText(String.format("%,.0f VNĐ", price));
 
+                java.sql.Timestamp checkIn = rs.getTimestamp("check_in_date");
+                lblCheckIn.setText(new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm").format(checkIn));
+
+                double pricePerNight = rs.getDouble("price_per_night");
+                lblRoomPrice.setText(String.format("%,.0f VNĐ", pricePerNight));
+
+                // 2. Tính toán tiền phòng (Check-in đến Hiện tại)
+                long currentTime = System.currentTimeMillis();
+                long diff = currentTime - checkIn.getTime();
+                long days = diff / (1000 * 60 * 60 * 24);
+                if (days == 0) days = 1; // Nếu ở chưa được 1 ngày thì tính là 1 ngày
+
+                double totalRoomPrice = days * pricePerNight;
+
+                // Reset bảng và thêm dòng Tiền phòng
                 tableModel.setRowCount(0);
-                tableModel.addRow(new Object[]{"Tiền phòng", "1 ngày (Tạm tính)", String.format("%,.0f", price)});
-                lblTotalAmount.setText(String.format("%,.0f VNĐ", price));
+                tableModel.addRow(new Object[]{
+                        "Tiền phòng",
+                        days + " ngày",
+                        String.format("%,.0f", totalRoomPrice)
+                });
+
+                // Biến tổng tiền tích lũy
+                double finalTotal = totalRoomPrice;
+
+                // 3. [MỚI] Lấy danh sách Dịch vụ từ DAO và cộng vào
+                DAO.ServiceDAO serviceDAO = new DAO.ServiceDAO();
+                java.util.List<Object[]> services = serviceDAO.getServicesByBookingId(bookingId);
+
+                if (services != null) {
+                    for (Object[] sv : services) {
+                        String svName = (String) sv[0];
+                        int qty = (int) sv[1];
+                        double svTotal = (double) sv[2];
+
+                        // Thêm vào bảng
+                        tableModel.addRow(new Object[]{
+                                "Dịch vụ: " + svName,
+                                "SL: " + qty,
+                                String.format("%,.0f", svTotal)
+                        });
+
+                        // Cộng dồn tiền
+                        finalTotal += svTotal;
+                    }
+                }
+
+                // 4. Hiển thị Tổng tiền cuối cùng
+                lblTotalAmount.setText(String.format("%,.0f VNĐ", finalTotal));
+
             } else {
                 JOptionPane.showMessageDialog(this, "Không tìm thấy thông tin đặt phòng!");
             }

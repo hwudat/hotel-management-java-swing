@@ -14,20 +14,17 @@ import java.util.List;
 public class ServiceUsageForm extends JFrame {
 
     private JTextField txtRoomID, txtCustomerName, txtPrice, txtSearch;
-    private JComboBox<Service> cbService; 
+    private JComboBox<Service> cbService; // Sử dụng Object Service
     private JSpinner spinQuantity;
     private JLabel lblTotalMoney;
     private JTable table;
     private DefaultTableModel tableModel;
-    
+
     private ServiceDAO dao;
     private List<Service> serviceList;
 
-    private final Color PRIMARY_COLOR = new Color(44, 62, 80);
-    private final Color ACCENT_COLOR = new Color(230, 126, 34);
-
     public ServiceUsageForm() {
-        dao = new ServiceDAO(); 
+        dao = new ServiceDAO();
         initUI();
         loadServicesToCombo();
     }
@@ -40,7 +37,7 @@ public class ServiceUsageForm extends JFrame {
         setLayout(new BorderLayout());
 
         JPanel topPanel = new JPanel(new BorderLayout());
-        topPanel.setBackground(PRIMARY_COLOR);
+        topPanel.setBackground(new Color(44, 62, 80));
         topPanel.setBorder(new EmptyBorder(15, 20, 15, 20));
 
         JLabel lblTitle = new JLabel("DỊCH VỤ PHÒNG");
@@ -67,7 +64,15 @@ public class ServiceUsageForm extends JFrame {
         mainPanel.add(createFormPanel());
         add(mainPanel, BorderLayout.CENTER);
 
-        ActionListener searchAction = e -> loadHistory(txtSearch.getText().trim());
+        ActionListener searchAction = e -> {
+            String roomCode = txtSearch.getText().trim();
+            if (!roomCode.isEmpty()) {
+                loadHistory(roomCode);
+
+                // [QUAN TRỌNG] Copy mã phòng từ ô tìm kiếm sang ô nhập liệu
+                txtRoomID.setText(roomCode);
+            }
+        };
         btnSearch.addActionListener(searchAction);
         txtSearch.addActionListener(searchAction);
     }
@@ -76,21 +81,22 @@ public class ServiceUsageForm extends JFrame {
         serviceList = dao.getAllServices();
         cbService.removeAllItems();
         for (Service s : serviceList) {
-            cbService.addItem(s); 
+            cbService.addItem(s); // Nhờ hàm toString() trong Model nên sẽ hiện tên
         }
     }
 
+    // Hàm này được gọi khi bấm nút "Tra cứu" hoặc sau khi Thêm mới
     private void loadHistory(String roomId) {
-        if (roomId.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Vui lòng nhập số phòng!");
-            return;
-        }
-        
+        // 1. Xóa sạch bảng cũ
+        tableModel.setRowCount(0);
+
+        // 2. Tìm tên khách hàng
+        String customerName = dao.getCustomerNameByRoom(roomId);
+        txtCustomerName.setText(customerName);
+
+        // 3. [QUAN TRỌNG] Gọi DAO để lấy dữ liệu từ bảng ServiceUsage (Bảng tạm)
+        // KHÔNG viết SQL SELECT từ BookingDetail ở đây nữa!
         dao.loadServiceUsageHistory(tableModel, roomId);
-        
-        txtRoomID.setText(roomId);
-        String cusName = dao.getCustomerNameByRoom(roomId);
-        txtCustomerName.setText(cusName);
     }
 
     private JPanel createTablePanel() {
@@ -116,7 +122,7 @@ public class ServiceUsageForm extends JFrame {
 
         int row = 0;
         addInputRow(inputPanel, "Số Phòng:", txtRoomID = new JTextField(), row++, gbc);
-        txtRoomID.setEditable(false); 
+        txtRoomID.setEditable(false);
 
         addInputRow(inputPanel, "Khách Hàng:", txtCustomerName = new JTextField(), row++, gbc);
         txtCustomerName.setEditable(false);
@@ -124,7 +130,7 @@ public class ServiceUsageForm extends JFrame {
         gbc.gridx = 0; gbc.gridy = row;
         inputPanel.add(new JLabel("Chọn Dịch Vụ:"), gbc);
         gbc.gridx = 1;
-        cbService = new JComboBox<>(); 
+        cbService = new JComboBox<>();
         inputPanel.add(cbService, gbc);
         row++;
 
@@ -146,6 +152,7 @@ public class ServiceUsageForm extends JFrame {
         lblTotalMoney.setForeground(Color.RED);
         inputPanel.add(lblTotalMoney, gbc);
 
+        // Sự kiện khi chọn dịch vụ thì cập nhật giá
         ActionListener updatePrice = e -> {
             Service selected = (Service) cbService.getSelectedItem();
             if (selected != null) {
@@ -165,7 +172,7 @@ public class ServiceUsageForm extends JFrame {
         btnAdd.setForeground(Color.WHITE);
         btnAdd.setFont(new Font("Segoe UI", Font.BOLD, 14));
         btnAdd.setPreferredSize(new Dimension(100, 40));
-        
+
         btnAdd.addActionListener(e -> addServiceUsage());
 
         JPanel btnPanel = new JPanel();
@@ -191,14 +198,14 @@ public class ServiceUsageForm extends JFrame {
             JOptionPane.showMessageDialog(this, "Chưa chọn phòng! Hãy nhập số phòng ở ô tìm kiếm trước.");
             return;
         }
-        
+
         Service selected = (Service) cbService.getSelectedItem();
         int qty = (int) spinQuantity.getValue();
         double total = selected.getPrice() * qty;
 
         if (dao.addServiceUsage(roomId, selected.getId(), qty, total)) {
             JOptionPane.showMessageDialog(this, "Thêm dịch vụ thành công!");
-            loadHistory(roomId); 
+            loadHistory(roomId); // Load lại bảng ngay sau khi thêm
         } else {
             JOptionPane.showMessageDialog(this, "Lỗi khi thêm dịch vụ!", "Lỗi", JOptionPane.ERROR_MESSAGE);
         }
@@ -211,7 +218,4 @@ public class ServiceUsageForm extends JFrame {
         p.add(c, gbc);
     }
 
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new ServiceUsageForm().setVisible(true));
-    }
 }

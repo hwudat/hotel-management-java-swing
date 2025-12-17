@@ -13,22 +13,26 @@ import java.awt.event.MouseEvent;
 
 public class CustomerManagementForm extends JFrame {
 
-    private JTextField txtCustomerID, txtRoomNumber, txtName, txtCCCD, txtPhone, txtNationality;
+    // Components
+    // [ĐÃ SỬA] Đổi txtNationality thành txtAddress
+    private JTextField txtCustomerID, txtRoomNumber, txtName, txtCCCD, txtPhone, txtAddress;
     private JRadioButton radMale, radFemale;
     private ButtonGroup genderGroup;
     private JTable table;
     private DefaultTableModel tableModel;
     private JTextField txtSearch;
-    
+
+    // DAO
     private CustomerDAO customerDAO;
 
+    // Màu sắc
     private final Color PRIMARY_COLOR = new Color(44, 62, 80);
     private final Color ACCENT_COLOR = new Color(52, 152, 219);
 
     public CustomerManagementForm() {
-        customerDAO = new CustomerDAO(); 
+        customerDAO = new CustomerDAO();
         initUI();
-        loadData(""); 
+        loadData("");
     }
 
     private void initUI() {
@@ -79,13 +83,17 @@ public class CustomerManagementForm extends JFrame {
 
     private void addCustomer() {
         if (!validateInput()) return;
-        
+
         Customer c = new Customer();
+        // Khi thêm mới từ Form quản lý, chưa có phòng nên để null hoặc rỗng
+        c.setRoomId(null);
         c.setFullName(txtName.getText());
         c.setIdentityCard(txtCCCD.getText());
         c.setGender(radMale.isSelected() ? "Nam" : "Nữ");
         c.setPhone(txtPhone.getText());
-        c.setNationality(txtNationality.getText());
+
+
+        c.setAddress(txtAddress.getText());
 
         if (customerDAO.addCustomer(c)) {
             JOptionPane.showMessageDialog(this, "Thêm thành công!");
@@ -105,11 +113,20 @@ public class CustomerManagementForm extends JFrame {
 
         Customer c = new Customer();
         c.setCustomerId(Integer.parseInt(txtCustomerID.getText()));
+
+        // Giữ nguyên RoomID cũ (lấy từ ô txtRoomNumber nhưng cẩn thận vì nó là text hiển thị)
+        // Tạm thời set null, DAO sẽ update các trường khác,
+        // hoặc bạn phải lấy đúng roomID ẩn nếu muốn update cả phòng.
+        // Ở đây ta giả định chỉ update thông tin cá nhân.
+        c.setRoomId(null);
+
         c.setFullName(txtName.getText());
         c.setIdentityCard(txtCCCD.getText());
         c.setGender(radMale.isSelected() ? "Nam" : "Nữ");
         c.setPhone(txtPhone.getText());
-        c.setNationality(txtNationality.getText());
+
+        // [ĐÃ SỬA] Sử dụng setAddress
+        c.setAddress(txtAddress.getText());
 
         if (customerDAO.updateCustomer(c)) {
             JOptionPane.showMessageDialog(this, "Cập nhật thành công!");
@@ -125,7 +142,7 @@ public class CustomerManagementForm extends JFrame {
             JOptionPane.showMessageDialog(this, "Vui lòng chọn khách hàng cần xóa!");
             return;
         }
-        
+
         int confirm = JOptionPane.showConfirmDialog(this, "Bạn chắc chắn muốn xóa khách hàng này?", "Xác nhận", JOptionPane.YES_NO_OPTION);
         if (confirm == JOptionPane.YES_OPTION) {
             int id = Integer.parseInt(txtCustomerID.getText());
@@ -155,7 +172,8 @@ public class CustomerManagementForm extends JFrame {
                 TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION,
                 new Font("Segoe UI", Font.BOLD, 14), PRIMARY_COLOR));
 
-        String[] cols = {"Mã KH", "Phòng", "Họ và Tên", "CCCD/CMND", "Giới tính", "SĐT", "Quốc tịch"};
+        // [ĐÃ SỬA] Đổi tiêu đề cột cuối cùng thành "Địa chỉ"
+        String[] cols = {"Mã KH", "Phòng", "Họ và Tên", "CCCD/CMND", "Giới tính", "SĐT", "Địa chỉ"};
         tableModel = new DefaultTableModel(cols, 0);
         table = new JTable(tableModel);
         table.setRowHeight(28);
@@ -181,13 +199,15 @@ public class CustomerManagementForm extends JFrame {
         txtRoomNumber.setText(tableModel.getValueAt(row, 1).toString());
         txtName.setText(tableModel.getValueAt(row, 2).toString());
         txtCCCD.setText(tableModel.getValueAt(row, 3).toString());
-        
+
         String gender = tableModel.getValueAt(row, 4).toString();
         if(gender.equalsIgnoreCase("Nam")) radMale.setSelected(true);
         else radFemale.setSelected(true);
 
         txtPhone.setText(tableModel.getValueAt(row, 5).toString());
-        txtNationality.setText(tableModel.getValueAt(row, 6).toString());
+
+        // [ĐÃ SỬA] Lấy dữ liệu địa chỉ và đổ vào ô txtAddress
+        txtAddress.setText(tableModel.getValueAt(row, 6).toString());
     }
 
     private JPanel createFormPanel() {
@@ -209,7 +229,7 @@ public class CustomerManagementForm extends JFrame {
         txtCustomerID.setBackground(new Color(240, 240, 240));
 
         addInputRow(inputPanel, "Phòng đang thuê:", txtRoomNumber = new JTextField(), row++, gbc);
-        txtRoomNumber.setEditable(false); // Phòng lấy từ DB, không sửa tay
+        txtRoomNumber.setEditable(false);
         txtRoomNumber.setFont(new Font("Segoe UI", Font.BOLD, 12));
 
         addInputRow(inputPanel, "Họ và Tên:", txtName = new JTextField(), row++, gbc);
@@ -229,13 +249,14 @@ public class CustomerManagementForm extends JFrame {
         row++;
 
         addInputRow(inputPanel, "Số điện thoại:", txtPhone = new JTextField(), row++, gbc);
-        addInputRow(inputPanel, "Quốc tịch:", txtNationality = new JTextField(), row++, gbc);
+
+        // [ĐÃ SỬA] Đổi label và biến thành Địa chỉ / txtAddress
+        addInputRow(inputPanel, "Địa chỉ:", txtAddress = new JTextField(), row++, gbc);
 
         gbc.gridy = row; gbc.weighty = 1.0;
         inputPanel.add(new JLabel(), gbc);
         panel.add(inputPanel, BorderLayout.CENTER);
 
-        // Nút bấm
         JPanel btnPanel = new JPanel(new GridLayout(2, 2, 10, 10));
         btnPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
 
@@ -244,7 +265,6 @@ public class CustomerManagementForm extends JFrame {
         JButton btnDelete = createButton("Xóa", new Color(231, 76, 60));
         JButton btnClear = createButton("Làm mới", Color.GRAY);
 
-        // Gắn sự kiện thật
         btnAdd.addActionListener(e -> addCustomer());
         btnEdit.addActionListener(e -> updateCustomer());
         btnDelete.addActionListener(e -> deleteCustomer());
@@ -281,7 +301,10 @@ public class CustomerManagementForm extends JFrame {
         txtName.setText("");
         txtCCCD.setText("");
         txtPhone.setText("");
-        txtNationality.setText("");
+
+        // [ĐÃ SỬA] Xóa ô địa chỉ
+        txtAddress.setText("");
+
         radMale.setSelected(true);
         table.clearSelection();
     }

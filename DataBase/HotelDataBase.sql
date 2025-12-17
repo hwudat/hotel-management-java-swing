@@ -112,3 +112,5 @@ CREATE TABLE ServiceUsage (
     FOREIGN KEY (service_id) REFERENCES Service(service_id),
     FOREIGN KEY (room_id) REFERENCES Room(room_id)
 );
+
+ALTER TABLE Booking ADD deposit DECIMAL(18, 0) DEFAULT 0;

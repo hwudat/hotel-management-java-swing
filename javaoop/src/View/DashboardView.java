@@ -1,24 +1,34 @@
 package View;
 
-import DAO.DashboardDAO; 
+import DAO.DashboardDAO;
 import DAO.RoomDAO;
 import models.Room;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.List;
 
 public class DashboardView extends JFrame {
 
     private RoomDAO roomDAO;
-    private DashboardDAO dashboardDAO; 
-    
-    private CardLayout cardLayout;       
-    private JPanel mainContentPanel;    
-    private JPanel roomGrid;            
+    private DashboardDAO dashboardDAO;
+
+    private CardLayout cardLayout;
+    private JPanel mainContentPanel;
+    private JPanel roomGrid;
+
+    // --- 1. KHAI BÁO BIẾN TOÀN CỤC ĐỂ CẬP NHẬT DỮ LIỆU ---
+    private JLabel lblTotalRooms;
+    private JLabel lblOccupiedRooms;
+    private JLabel lblAvailableRooms;
+    private DefaultTableModel tableModelActivity;
+    // -----------------------------------------------------
 
     private final Color SIDEBAR_BG = new Color(44, 62, 80);
     private final Color TEXT_COLOR = Color.WHITE;
@@ -26,9 +36,52 @@ public class DashboardView extends JFrame {
 
     public DashboardView() {
         roomDAO = new RoomDAO();
-        dashboardDAO = new DashboardDAO(); 
+        dashboardDAO = new DashboardDAO();
         initUI();
+
+        // --- 2. THÊM SỰ KIỆN TỰ ĐỘNG CẬP NHẬT KHI QUAY LẠI MÀN HÌNH NÀY ---
+        this.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowOpened(WindowEvent e) {
+                refreshData(); // Load lần đầu khi mở
+            }
+
+            @Override
+            public void windowActivated(WindowEvent e) {
+                refreshData(); // Load lại khi quay lại từ form khác (CheckIn/Out)
+            }
+        });
     }
+
+    // --- 3. HÀM LÀM MỚI DỮ LIỆU (QUAN TRỌNG) ---
+    public void refreshData() {
+        // Cập nhật số liệu thống kê
+        int total = dashboardDAO.getRoomCountByStatus("TOTAL");
+        int occupied = dashboardDAO.getRoomCountByStatus("Occupied");
+        int available = dashboardDAO.getRoomCountByStatus("Available");
+
+        if (lblTotalRooms != null) lblTotalRooms.setText(String.valueOf(total));
+        if (lblOccupiedRooms != null) lblOccupiedRooms.setText(String.valueOf(occupied));
+        if (lblAvailableRooms != null) lblAvailableRooms.setText(String.valueOf(available));
+
+        // Cập nhật bảng hoạt động gần đây
+        if (tableModelActivity != null) {
+            tableModelActivity.setRowCount(0); // Xóa dữ liệu cũ
+            Object[][] data = dashboardDAO.getRecentActivities();
+            if (data != null && data.length > 0) {
+                for (Object[] row : data) {
+                    tableModelActivity.addRow(row);
+                }
+            } else {
+                // Nếu muốn hiện dòng trống khi không có dữ liệu thì mở comment dưới
+                // tableModelActivity.addRow(new Object[]{"Chưa có dữ liệu", "-", "-", "-"});
+            }
+        }
+
+        // Cập nhật sơ đồ phòng (nếu đang xem tab đó)
+        loadRoomCards();
+    }
+    // -------------------------------------------
 
     private void initUI() {
         setTitle("Hệ thống Quản lý Khách sạn");
@@ -69,16 +122,16 @@ public class DashboardView extends JFrame {
         lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 22));
         logoPanel.add(lblTitle);
         logoPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        
+
         sidebar.add(logoPanel);
         sidebar.add(Box.createVerticalStrut(10));
 
         addSingleMenu(sidebar, "  Màn Hình Chính", "HOME");
-        
+
         addDropdownMenu(sidebar, "  Quản Lý Phòng", new String[]{"Sơ Đồ Phòng", "Loại Phòng", "Đặt phòng"});
         addDropdownMenu(sidebar, "  Khách Hàng", new String[]{"Thông Tin KH", "Dịch Vụ"});
         addDropdownMenu(sidebar, "  Nhân Viên", new String[]{"Danh Sách NV"});
-        addDropdownMenu(sidebar, "  Dịch Vụ",new String[]{"Danh sách DV"});
+        addDropdownMenu(sidebar, "  Dịch Vụ", new String[]{"Danh sách DV"});
         addSingleMenu(sidebar, "  Báo Cáo - Thống Kê", "REPORT");
 
         sidebar.add(Box.createVerticalGlue());
@@ -127,14 +180,16 @@ public class DashboardView extends JFrame {
         JPanel statsContainer = new JPanel(new GridLayout(1, 3, 20, 0));
         statsContainer.setBackground(new Color(240, 242, 245));
         statsContainer.setMaximumSize(new Dimension(Integer.MAX_VALUE, 150));
-    
-        int totalRooms = dashboardDAO.getRoomCountByStatus("TOTAL");
-        int occupiedRooms = dashboardDAO.getRoomCountByStatus("Occupied"); 
-        int availableRooms = dashboardDAO.getRoomCountByStatus("Available"); 
 
-        statsContainer.add(createModernStatCard("TỔNG SỐ PHÒNG", String.valueOf(totalRooms), "🛏", new Color(52, 152, 219)));
-        statsContainer.add(createModernStatCard("ĐANG SỬ DỤNG", String.valueOf(occupiedRooms), "👤", new Color(231, 76, 60)));
-        statsContainer.add(createModernStatCard("PHÒNG TRỐNG", String.valueOf(availableRooms), "✅", new Color(46, 204, 113)));
+        // Khởi tạo Label rỗng, dữ liệu sẽ được nạp bởi hàm refreshData()
+        lblTotalRooms = new JLabel("...");
+        lblOccupiedRooms = new JLabel("...");
+        lblAvailableRooms = new JLabel("...");
+
+        // Truyền biến Label vào hàm tạo card
+        statsContainer.add(createModernStatCard("TỔNG SỐ PHÒNG", lblTotalRooms, "🛏", new Color(52, 152, 219)));
+        statsContainer.add(createModernStatCard("ĐANG SỬ DỤNG", lblOccupiedRooms, "👤", new Color(231, 76, 60)));
+        statsContainer.add(createModernStatCard("PHÒNG TRỐNG", lblAvailableRooms, "✅", new Color(46, 204, 113)));
 
         bodyPanel.add(statsContainer);
         bodyPanel.add(Box.createVerticalStrut(30));
@@ -150,38 +205,39 @@ public class DashboardView extends JFrame {
         return mainPanel;
     }
 
-    private JPanel createModernStatCard(String title, String number, String icon, Color iconBgColor) {
+    // SỬA: Tham số thứ 2 là JLabel thay vì String
+    private JPanel createModernStatCard(String title, JLabel lblNumber, String icon, Color iconBgColor) {
         JPanel card = new JPanel(new BorderLayout());
         card.setBackground(Color.WHITE);
         card.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createMatteBorder(0, 0, 4, 0, iconBgColor),
-            new EmptyBorder(20, 20, 20, 20)
+                BorderFactory.createMatteBorder(0, 0, 4, 0, iconBgColor),
+                new EmptyBorder(20, 20, 20, 20)
         ));
 
         JLabel lblIcon = new JLabel(icon, SwingConstants.CENTER);
         lblIcon.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 40));
         lblIcon.setForeground(iconBgColor);
         lblIcon.setPreferredSize(new Dimension(60, 60));
-        
+
         JPanel rightPanel = new JPanel(new GridLayout(2, 1));
         rightPanel.setBackground(Color.WHITE);
-        
-        JLabel lblNum = new JLabel(number);
-        lblNum.setFont(new Font("Segoe UI", Font.BOLD, 36));
-        lblNum.setForeground(new Color(50, 50, 50));
-        
+
+        // Cấu hình cho label số liệu (dùng biến được truyền vào)
+        lblNumber.setFont(new Font("Segoe UI", Font.BOLD, 36));
+        lblNumber.setForeground(new Color(50, 50, 50));
+
         JLabel lblTitle = new JLabel(title);
         lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 12));
         lblTitle.setForeground(Color.GRAY);
-        
-        rightPanel.add(lblNum);
+
+        rightPanel.add(lblNumber);
         rightPanel.add(lblTitle);
 
         card.add(lblIcon, BorderLayout.WEST);
         card.add(rightPanel, BorderLayout.CENTER);
         return card;
     }
-    
+
     private JPanel createRecentActivityPanel() {
         JPanel p = new JPanel(new BorderLayout());
         p.setBackground(Color.WHITE);
@@ -194,25 +250,22 @@ public class DashboardView extends JFrame {
         p.add(title, BorderLayout.NORTH);
 
         String[] columns = {"Khách Hàng", "Phòng", "Thời Gian", "Trạng Thái"};
-        
-        Object[][] data = dashboardDAO.getRecentActivities();
 
-        if (data == null || data.length == 0) {
-            data = new Object[][]{{"Chưa có dữ liệu", "-", "-", "-"}};
-        }
+        // Khởi tạo Model toàn cục
+        tableModelActivity = new DefaultTableModel(columns, 0);
 
-        JTable table = new JTable(data, columns);
+        JTable table = new JTable(tableModelActivity);
         table.setRowHeight(30);
         table.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 14));
         table.getTableHeader().setBackground(new Color(240, 240, 240));
         table.setShowGrid(false);
         table.setShowHorizontalLines(true);
-        
+
         JScrollPane scroll = new JScrollPane(table);
         scroll.setBorder(null);
         scroll.getViewport().setBackground(Color.WHITE);
-        
+
         p.add(scroll, BorderLayout.CENTER);
         return p;
     }
@@ -232,32 +285,46 @@ public class DashboardView extends JFrame {
         btnPanel.setBackground(Color.WHITE);
 
         JButton btnCheckIn = createActionBtn("Check In ", new Color(52, 152, 219));
-      
+
         btnCheckIn.addActionListener(e -> {
-            try { new CheckInForm().setVisible(true); } 
-            catch (Exception ex) { JOptionPane.showMessageDialog(this, "Chức năng đang phát triển!"); }
+            try {
+                // Khi mở form CheckIn, truyền 'this' (DashboardView) vào nếu muốn gọi refresh thủ công
+                // Hoặc để tự động refresh nhờ WindowListener
+                new CheckInForm().setVisible(true);
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "Chức năng đang phát triển!");
+            }
         });
         btnPanel.add(btnCheckIn);
 
         JButton btnCheckOut = createActionBtn("Check Out ", new Color(231, 76, 60));
-        
+
         btnCheckOut.addActionListener(e -> {
-             try { new CheckOutForm().setVisible(true); } 
-             catch (Exception ex) { JOptionPane.showMessageDialog(this, "Chức năng đang phát triển!"); }
+            try {
+                new CheckOutForm().setVisible(true);
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "Chức năng đang phát triển!");
+            }
         });
         btnPanel.add(btnCheckOut);
 
         JButton btnInvoice = createActionBtn("Xuất Hóa Đơn", new Color(241, 196, 15));
         btnInvoice.addActionListener(e -> {
-             try { new InvoiceForm().setVisible(true); } 
-             catch (Exception ex) { JOptionPane.showMessageDialog(this, "Chức năng đang phát triển!"); }
+            try {
+                new InvoiceForm().setVisible(true);
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "Chức năng đang phát triển!");
+            }
         });
         btnPanel.add(btnInvoice);
 
         JButton btnReport = createActionBtn("Báo Cáo Ngày", new Color(155, 89, 182));
         btnReport.addActionListener(e -> {
-             try { new DailyReportForm().setVisible(true); } 
-             catch (Exception ex) { JOptionPane.showMessageDialog(this, "Chức năng đang phát triển!"); }
+            try {
+                new DailyReportForm().setVisible(true);
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "Chức năng đang phát triển!");
+            }
         });
         btnPanel.add(btnReport);
 
@@ -283,7 +350,7 @@ public class DashboardView extends JFrame {
         JPanel topPanel = new JPanel(new BorderLayout());
         topPanel.setBackground(Color.WHITE);
         topPanel.setBorder(new EmptyBorder(20, 20, 10, 20));
-        
+
         JLabel lblMap = new JLabel("SƠ ĐỒ PHÒNG", SwingConstants.LEFT);
         lblMap.setFont(new Font("Segoe UI", Font.BOLD, 24));
         lblMap.setForeground(SIDEBAR_BG);
@@ -303,7 +370,7 @@ public class DashboardView extends JFrame {
         roomGrid.setBackground(Color.WHITE);
         roomGrid.setBorder(new EmptyBorder(20, 20, 20, 20));
 
-        loadRoomCards(); 
+        loadRoomCards();
 
         JPanel gridWrapper = new JPanel(new BorderLayout());
         gridWrapper.setBackground(Color.WHITE);
@@ -324,8 +391,14 @@ public class DashboardView extends JFrame {
                 g.setColor(color);
                 g.fillRect(x, y, 16, 16);
             }
-            public int getIconWidth() { return 16; }
-            public int getIconHeight() { return 16; }
+
+            public int getIconWidth() {
+                return 16;
+            }
+
+            public int getIconHeight() {
+                return 16;
+            }
         });
         lbl.setIconTextGap(8);
         return lbl;
@@ -354,10 +427,14 @@ public class DashboardView extends JFrame {
             if ("LOGOUT".equals(targetPanelKey)) {
                 handleLogout();
             } else if ("HOME".equals(targetPanelKey)) {
+                refreshData(); // Làm mới khi bấm về Home
                 cardLayout.show(mainContentPanel, "HOME");
             } else if ("REPORT".equals(targetPanelKey)) {
-                 try { new MonthlyReportForm().setVisible(true); } 
-                 catch (Exception ex) { JOptionPane.showMessageDialog(this, "Chức năng đang phát triển!"); }
+                try {
+                    new MonthlyReportForm().setVisible(true);
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(this, "Chức năng đang phát triển!");
+                }
             } else {
                 System.out.println("Chức năng chưa phát triển: " + text);
             }
@@ -384,19 +461,21 @@ public class DashboardView extends JFrame {
             subBtn.setForeground(new Color(200, 200, 200));
 
             subBtn.addActionListener(e -> {
-                
+
                 if (s.trim().equalsIgnoreCase("Sơ Đồ Phòng")) {
-                    loadRoomCards(); 
+                    loadRoomCards(); // Làm mới sơ đồ phòng
                     cardLayout.show(mainContentPanel, "ROOM_MAP");
-                } 
-                else {
+                } else {
                     try {
                         if (s.trim().equalsIgnoreCase("Loại Phòng")) new RoomTypeManager().setVisible(true);
                         else if (s.trim().equalsIgnoreCase("Đặt phòng")) new BookingForm().setVisible(true);
-                        else if (s.trim().equalsIgnoreCase("Thông Tin KH")) new CustomerManagementForm().setVisible(true);
+                        else if (s.trim().equalsIgnoreCase("Thông Tin KH"))
+                            new CustomerManagementForm().setVisible(true);
                         else if (s.trim().equalsIgnoreCase("Dịch Vụ")) new ServiceUsageForm().setVisible(true);
-                        else if (s.trim().equalsIgnoreCase("Danh Sách NV") || s.trim().equalsIgnoreCase("Nhân Viên")) new EmployeeManagerForm().setVisible(true);
-                        else if (s.trim().equalsIgnoreCase("Danh sách DV")) new ServiceManagerForm().setVisible(true);
+                        else if (s.trim().equalsIgnoreCase("Danh Sách NV") || s.trim().equalsIgnoreCase("Nhân Viên"))
+                            new EmployeeManagerForm().setVisible(true);
+                        else if (s.trim().equalsIgnoreCase("Danh sách DV"))
+                            new ServiceManagerForm().setVisible(true);
                     } catch (Exception ex) {
                         System.out.println("Chưa có class: " + s);
                     }
@@ -431,16 +510,21 @@ public class DashboardView extends JFrame {
         btn.setBorder(new EmptyBorder(10, 20, 10, 10));
         btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btn.addMouseListener(new MouseAdapter() {
-            public void mouseEntered(MouseEvent e) { btn.setBackground(HOVER_COLOR); }
-            public void mouseExited(MouseEvent e) { btn.setBackground(SIDEBAR_BG); }
+            public void mouseEntered(MouseEvent e) {
+                btn.setBackground(HOVER_COLOR);
+            }
+
+            public void mouseExited(MouseEvent e) {
+                btn.setBackground(SIDEBAR_BG);
+            }
         });
         return btn;
     }
 
     private void handleLogout() {
         int choice = JOptionPane.showConfirmDialog(
-            this, "Bạn có chắc chắn muốn đăng xuất không?", "Xác nhận đăng xuất",
-            JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE
+                this, "Bạn có chắc chắn muốn đăng xuất không?", "Xác nhận đăng xuất",
+                JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE
         );
         if (choice == JOptionPane.YES_OPTION) {
             this.dispose();

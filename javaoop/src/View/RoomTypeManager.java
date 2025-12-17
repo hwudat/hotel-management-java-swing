@@ -19,16 +19,17 @@ public class RoomTypeManager extends JFrame {
     private JTextArea txtDesc;
     private JTable table;
     private DefaultTableModel tableModel;
-    
+
     private RoomTypeDAO dao;
 
+    // Màu sắc giao diện
     private final Color PRIMARY_COLOR = new Color(44, 62, 80);
     private final Color BTN_ADD_COLOR = new Color(46, 204, 113);
     private final Color BTN_EDIT_COLOR = new Color(52, 152, 219);
     private final Color BTN_DEL_COLOR = new Color(231, 76, 60);
 
     public RoomTypeManager() {
-        dao = new RoomTypeDAO(); 
+        dao = new RoomTypeDAO();
         initUI();
         loadData();
     }
@@ -40,6 +41,7 @@ public class RoomTypeManager extends JFrame {
         setLocationRelativeTo(null);
         setLayout(new BorderLayout(10, 10));
 
+        // --- Header ---
         JPanel headerPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         headerPanel.setBackground(PRIMARY_COLOR);
         headerPanel.setPreferredSize(new Dimension(100, 60));
@@ -50,61 +52,65 @@ public class RoomTypeManager extends JFrame {
         headerPanel.add(lblTitle);
         add(headerPanel, BorderLayout.NORTH);
 
+        // --- Main Content ---
         JPanel mainPanel = new JPanel(new GridLayout(1, 2, 20, 0));
         mainPanel.setBorder(new EmptyBorder(10, 20, 20, 20));
 
-        JPanel formPanel = createFormPanel();
-
-        JPanel listPanel = createListPanel();
-
-        mainPanel.add(formPanel);
-        mainPanel.add(listPanel);
+        mainPanel.add(createFormPanel());
+        mainPanel.add(createListPanel());
         add(mainPanel, BorderLayout.CENTER);
     }
 
     private JPanel createFormPanel() {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBorder(BorderFactory.createTitledBorder(
-                BorderFactory.createLineBorder(PRIMARY_COLOR), "Thông tin loại phòng", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, new Font("Segoe UI", Font.BOLD, 14), PRIMARY_COLOR));
+                BorderFactory.createLineBorder(PRIMARY_COLOR), "Thông tin loại phòng",
+                TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION,
+                new Font("Segoe UI", Font.BOLD, 14), PRIMARY_COLOR));
 
         JPanel inputPanel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(10, 10, 10, 10);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
+        // ID (Read-only)
         gbc.gridx = 0; gbc.gridy = 0;
-        inputPanel.add(new JLabel("Mã loại (Auto):"), gbc);
+        inputPanel.add(new JLabel("Mã loại:"), gbc);
         gbc.gridx = 1;
         txtTypeID = new JTextField(15);
-        txtTypeID.setEditable(false); 
+        txtTypeID.setEditable(false);
         txtTypeID.setBackground(new Color(230, 230, 230));
         inputPanel.add(txtTypeID, gbc);
 
+        // Tên loại
         gbc.gridx = 0; gbc.gridy = 1;
         inputPanel.add(new JLabel("Tên loại phòng:"), gbc);
         gbc.gridx = 1;
         txtTypeName = new JTextField(15);
         inputPanel.add(txtTypeName, gbc);
 
+        // Giá
         gbc.gridx = 0; gbc.gridy = 2;
         inputPanel.add(new JLabel("Giá theo đêm (VND):"), gbc);
         gbc.gridx = 1;
         txtPrice = new JTextField(15);
         inputPanel.add(txtPrice, gbc);
 
+        // Mô tả
         gbc.gridx = 0; gbc.gridy = 3;
         gbc.anchor = GridBagConstraints.NORTHWEST;
         inputPanel.add(new JLabel("Mô tả tiện ích:"), gbc);
         gbc.gridx = 1;
         txtDesc = new JTextArea(5, 15);
         txtDesc.setLineWrap(true);
+        txtDesc.setWrapStyleWord(true);
         JScrollPane scrollDesc = new JScrollPane(txtDesc);
         inputPanel.add(scrollDesc, gbc);
 
         panel.add(inputPanel, BorderLayout.CENTER);
 
+        // Buttons
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
-
         JButton btnAdd = createBtn("Thêm", BTN_ADD_COLOR);
         JButton btnEdit = createBtn("Sửa", BTN_EDIT_COLOR);
         JButton btnDel = createBtn("Xóa", BTN_DEL_COLOR);
@@ -127,7 +133,9 @@ public class RoomTypeManager extends JFrame {
     private JPanel createListPanel() {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBorder(BorderFactory.createTitledBorder(
-                BorderFactory.createLineBorder(PRIMARY_COLOR), "Danh sách hiện có", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, new Font("Segoe UI", Font.BOLD, 14), PRIMARY_COLOR));
+                BorderFactory.createLineBorder(PRIMARY_COLOR), "Danh sách hiện có",
+                TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION,
+                new Font("Segoe UI", Font.BOLD, 14), PRIMARY_COLOR));
 
         String[] cols = {"ID", "Tên loại", "Giá (VND)", "Mô tả"};
         tableModel = new DefaultTableModel(cols, 0);
@@ -136,6 +144,7 @@ public class RoomTypeManager extends JFrame {
         table.getTableHeader().setBackground(new Color(230, 230, 230));
         table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 12));
 
+        // Sự kiện click vào bảng -> đổ dữ liệu lên form
         table.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -143,10 +152,11 @@ public class RoomTypeManager extends JFrame {
                 if (row >= 0) {
                     txtTypeID.setText(tableModel.getValueAt(row, 0).toString());
                     txtTypeName.setText(tableModel.getValueAt(row, 1).toString());
-                    
-                    String priceStr = tableModel.getValueAt(row, 2).toString().replace(",", "").replace(" VNĐ", "");
+
+                    // Xử lý chuỗi giá tiền (bỏ dấu phẩy để hiển thị lên ô nhập)
+                    String priceStr = tableModel.getValueAt(row, 2).toString().replace(",", "");
                     txtPrice.setText(priceStr);
-                    
+
                     Object desc = tableModel.getValueAt(row, 3);
                     txtDesc.setText(desc != null ? desc.toString() : "");
                 }
@@ -158,6 +168,8 @@ public class RoomTypeManager extends JFrame {
         return panel;
     }
 
+    // --- CÁC HÀM XỬ LÝ LOGIC ---
+
     private void loadData() {
         tableModel.setRowCount(0);
         List<RoomType> list = dao.getAllRoomTypes();
@@ -165,14 +177,14 @@ public class RoomTypeManager extends JFrame {
 
         for (RoomType rt : list) {
             tableModel.addRow(new Object[]{
-                rt.getTypeId(),
-                rt.getTypeName(),
-                df.format(rt.getPrice()),
-                rt.getDescription() 
+                    rt.getTypeId(),     // Model trả về String (hợp lệ)
+                    rt.getTypeName(),
+                    df.format(rt.getPrice()),
+                    rt.getDescription()
             });
         }
     }
-   
+
     private void addRoomType() {
         if(txtTypeName.getText().isEmpty() || txtPrice.getText().isEmpty()) {
             JOptionPane.showMessageDialog(this, "Vui lòng nhập Tên và Giá!", "Thiếu thông tin", JOptionPane.WARNING_MESSAGE);
@@ -180,9 +192,10 @@ public class RoomTypeManager extends JFrame {
         }
         try {
             String name = txtTypeName.getText();
-            double price = Double.parseDouble(txtPrice.getText());
+            double price = Double.parseDouble(txtPrice.getText().replace(",", ""));
             String desc = txtDesc.getText();
 
+            // Gọi DAO
             if (dao.addRoomType(name, price, desc)) {
                 JOptionPane.showMessageDialog(this, "Thêm thành công!");
                 loadData();
@@ -194,17 +207,18 @@ public class RoomTypeManager extends JFrame {
             JOptionPane.showMessageDialog(this, "Giá tiền phải là số!", "Lỗi định dạng", JOptionPane.ERROR_MESSAGE);
         }
     }
-   
+
     private void updateRoomType() {
         if (txtTypeID.getText().isEmpty()) {
             JOptionPane.showMessageDialog(this, "Vui lòng chọn loại phòng cần sửa!");
             return;
         }
         try {
+            // DAO yêu cầu ID là int, nhưng View đang hiển thị String -> Phải ép kiểu
             int id = Integer.parseInt(txtTypeID.getText());
             String name = txtTypeName.getText();
-            double price = Double.parseDouble(txtPrice.getText());
-            String desc = txtDesc.getText(); 
+            double price = Double.parseDouble(txtPrice.getText().replace(",", ""));
+            String desc = txtDesc.getText();
 
             if (dao.updateRoomType(id, name, price, desc)) {
                 JOptionPane.showMessageDialog(this, "Cập nhật thành công!");
@@ -214,28 +228,33 @@ public class RoomTypeManager extends JFrame {
                 JOptionPane.showMessageDialog(this, "Lỗi khi cập nhật!");
             }
         } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(this, "Giá tiền hoặc ID không hợp lệ!");
+            JOptionPane.showMessageDialog(this, "Dữ liệu không hợp lệ (ID hoặc Giá tiền)!");
         }
     }
-   
+
     private void deleteRoomType() {
         if (txtTypeID.getText().isEmpty()) {
             JOptionPane.showMessageDialog(this, "Vui lòng chọn loại phòng cần xóa!");
             return;
         }
-        int confirm = JOptionPane.showConfirmDialog(this, 
-            "Bạn chắc chắn muốn xóa? (Nếu loại phòng này đang được dùng, không thể xóa)", 
-            "Xác nhận", JOptionPane.YES_NO_OPTION);
-            
+        int confirm = JOptionPane.showConfirmDialog(this,
+                "Bạn chắc chắn muốn xóa? (Nếu loại phòng này đang được dùng, không thể xóa)",
+                "Xác nhận", JOptionPane.YES_NO_OPTION);
+
         if (confirm == JOptionPane.YES_OPTION) {
-            int id = Integer.parseInt(txtTypeID.getText());
-           
-            if (dao.deleteRoomType(id)) {
-                JOptionPane.showMessageDialog(this, "Xóa thành công!");
-                loadData();
-                clearForm();
-            } else {
-                JOptionPane.showMessageDialog(this, "Không thể xóa! Có thể loại phòng đang được sử dụng.", "Lỗi", JOptionPane.ERROR_MESSAGE);
+            try {
+                // Ép kiểu ID về int để gọi DAO
+                int id = Integer.parseInt(txtTypeID.getText());
+
+                if (dao.deleteRoomType(id)) {
+                    JOptionPane.showMessageDialog(this, "Xóa thành công!");
+                    loadData();
+                    clearForm();
+                } else {
+                    JOptionPane.showMessageDialog(this, "Không thể xóa! Có thể loại phòng đang được sử dụng.", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                }
+            } catch (NumberFormatException e) {
+                e.printStackTrace();
             }
         }
     }

@@ -5,7 +5,6 @@ import models.Service;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
@@ -25,11 +24,8 @@ public class ServiceManagerForm extends JFrame {
     private final String[] CATEGORIES = {"Đồ Ăn", "Đồ Uống", "Giặt Ủi", "Spa/Massage", "Giải Trí", "Khác"};
     private final String[] UNITS = {"Cái", "Lon", "Ly", "Kg", "Suất", "Vé", "Lần", "Chai", "Tô", "Dĩa"};
 
-    private final Color PRIMARY_COLOR = new Color(44, 62, 80);
-    private final Color ACCENT_COLOR = new Color(230, 126, 34);
-
     public ServiceManagerForm() {
-        serviceDAO = new ServiceDAO(); 
+        serviceDAO = new ServiceDAO();
         initUI();
         loadData("");
     }
@@ -42,7 +38,7 @@ public class ServiceManagerForm extends JFrame {
         setLayout(new BorderLayout());
 
         JPanel topPanel = new JPanel(new BorderLayout());
-        topPanel.setBackground(PRIMARY_COLOR);
+        topPanel.setBackground(new Color(44, 62, 80));
         topPanel.setBorder(new EmptyBorder(15, 20, 15, 20));
 
         JLabel lblTitle = new JLabel("DANH MỤC DỊCH VỤ");
@@ -74,19 +70,18 @@ public class ServiceManagerForm extends JFrame {
         add(mainPanel, BorderLayout.CENTER);
     }
 
-
     private void loadData(String keyword) {
-        tableModel.setRowCount(0); 
+        tableModel.setRowCount(0);
         List<Service> list = serviceDAO.getListServices(keyword);
         DecimalFormat df = new DecimalFormat("#,###");
 
         for (Service s : list) {
             tableModel.addRow(new Object[]{
-                s.getId(),
-                s.getName(),
-                s.getCategory(),
-                s.getUnit(),
-                df.format(s.getPrice())
+                    s.getId(),
+                    s.getName(),
+                    s.getCategory(),
+                    s.getUnit(),
+                    df.format(s.getPrice())
             });
         }
     }
@@ -101,7 +96,7 @@ public class ServiceManagerForm extends JFrame {
             s.setName(txtServiceName.getText());
             s.setCategory(cbCategory.getSelectedItem().toString());
             s.setUnit(cbUnit.getSelectedItem().toString());
-            s.setPrice(parsePrice(txtPrice.getText())); 
+            s.setPrice(parsePrice(txtPrice.getText()));
 
             if (serviceDAO.addService(s)) {
                 JOptionPane.showMessageDialog(this, "Thêm thành công!");
@@ -122,7 +117,7 @@ public class ServiceManagerForm extends JFrame {
         }
         try {
             Service s = new Service();
-            s.setId(Integer.parseInt(txtServiceID.getText())); 
+            s.setId(Integer.parseInt(txtServiceID.getText()));
             s.setName(txtServiceName.getText());
             s.setCategory(cbCategory.getSelectedItem().toString());
             s.setUnit(cbUnit.getSelectedItem().toString());
@@ -154,17 +149,14 @@ public class ServiceManagerForm extends JFrame {
                 loadData("");
                 clearForm();
             } else {
-                JOptionPane.showMessageDialog(this, "Không thể xóa! Dịch vụ này đã được sử dụng trong hóa đơn.", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Không thể xóa! Dịch vụ này đã được sử dụng.", "Lỗi", JOptionPane.ERROR_MESSAGE);
             }
         }
     }
 
-  
     private double parsePrice(String priceText) {
-    
         return Double.parseDouble(priceText.replace(",", "").trim());
     }
-
 
     private JPanel createTablePanel() {
         JPanel panel = new JPanel(new BorderLayout());
@@ -193,7 +185,6 @@ public class ServiceManagerForm extends JFrame {
         txtServiceName.setText(tableModel.getValueAt(row, 1).toString());
         cbCategory.setSelectedItem(tableModel.getValueAt(row, 2).toString());
         cbUnit.setSelectedItem(tableModel.getValueAt(row, 3).toString());
-       
         txtPrice.setText(tableModel.getValueAt(row, 4).toString().replace(",", ""));
     }
 
@@ -269,7 +260,6 @@ public class ServiceManagerForm extends JFrame {
         btn.setBackground(bg);
         btn.setForeground(Color.WHITE);
         btn.setFocusPainted(false);
-        btn.setFont(new Font("Segoe UI", Font.BOLD, 12));
         return btn;
     }
 
@@ -280,9 +270,5 @@ public class ServiceManagerForm extends JFrame {
         cbUnit.setSelectedIndex(0);
         txtPrice.setText("");
         table.clearSelection();
-    }
-
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new ServiceManagerForm().setVisible(true));
     }
 }

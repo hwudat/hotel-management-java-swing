@@ -1,23 +1,32 @@
 package models;
 
 public class Customer {
+    private String roomId;
     private int customerId; 
     private String fullName;
     private String phone;
-    private String identityCard; 
+    private String identityCard; // CCCD
     private String gender;
-    private String nationality;
+    private String address;
 
     public Customer() {
     }
 
-    public Customer(int customerId, String fullName, String phone, String identityCard, String gender, String nationality) {
+    public void setRoomId(String roomId) {
+        this.roomId = roomId;
+    }
+
+    public String getRoomId() {
+        return roomId;
+    }
+
+    public Customer(int customerId, String fullName, String phone, String identityCard, String gender, String address) {
         this.customerId = customerId;
         this.fullName = fullName;
         this.phone = phone;
         this.identityCard = identityCard;
         this.gender = gender;
-        this.nationality = nationality;
+        this.address = address;
     }
 
     public int getCustomerId() { return customerId; }
@@ -35,6 +44,8 @@ public class Customer {
     public String getGender() { return gender; }
     public void setGender(String gender) { this.gender = gender; }
 
-    public String getNationality() { return nationality; }
-    public void setNationality(String nationality) { this.nationality = nationality; }
+    public String getAddress() { return address; }
+    public void setAddress(String address) {
+        this.address = address;
+    }
 }
